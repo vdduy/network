@@ -9,12 +9,17 @@ Là mô hình VPN site to site dạng hub-spoke. Tất cả spoke sẽ tập tru
 
 OFFICE:
 Local Network: 192.168.10.0/24
+Tunnel1 (virtual IP): 172.16.0.1
 
 HOME:
 Local Network: 192.168.20.0/24
+Tunnel1 (Virtual IP): 172.16.0.2
+
+Nếu trên Office kết nối tới nhiều Home khác thì phải tạo Tunnel khác và range ip khác. 
+Ví dụ IP Tunnel2 172.16.1.1
 
 
-Cài đặt openvpn trên offce và home
+# Cài đặt openvpn trên offce và home
 
 ```
 yum install epel-release -y
