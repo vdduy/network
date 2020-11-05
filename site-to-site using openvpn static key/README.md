@@ -1,9 +1,10 @@
 # OpenVPN site to site with static key
 Topology
+```
                         Office
                        /  |  \
                   Home01 ...  Home n
-                  
+```        
 Là mô hình VPN site to site dạng hub-spoke. Tất cả spoke sẽ tập trung vào 1 hub.
 
 OFFICE:
