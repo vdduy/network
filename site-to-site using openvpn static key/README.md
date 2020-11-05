@@ -1,22 +1,31 @@
-OpenVPN site to site with centos7 and symmetric encryption
+# OpenVPN site to site with static key
+Topology
+                        Office
+                       /  |  \
+                  Home01 ...  Home n
+                  
+Là mô hình VPN site to site dạng hub-spoke. Tất cả spoke sẽ tập trung vào 1 hub.
 
 OFFICE:
-Network: 192.168.10.0/24
+Local Network: 192.168.10.0/24
 
 HOME:
-Network: 192.168.20.0/24
+Local Network: 192.168.20.0/24
 
 
-DO THIS ON ALL MACHINES:
+Cài đặt openvpn trên offce và home
 
-yum install https://dl.fedoraproject.org/pub/epel/7/x86_64/e/epel-release-7-5.noarch.rpm
-yum install openvpn
+```
+yum install epel-release -y
+yum update -y
+yum install openvpn -y
+```
 
-DO THIS ON OFFICE MACHINE:
-
+# Cài đặt trên Office
+```
 vi /etc/openvpn/office-home.conf
 ------
-remote home.compress.to
+remote home.compress.to //Địa chỉ ip public của home
 port 4001
 float
 proto udp
@@ -27,55 +36,46 @@ persist-local-ip
 persist-remote-ip
 comp-lzo
 ping 15
+ping-restart 45
 secret /etc/openvpn/office-home.key
+cipher AES-256-CBC
 route 192.168.20.0 255.255.255.0
 user openvpn
 group openvpn
 syslog office-home
 verb 1
 ------
+```
 
-vi /etc/sysconfig/iptables
-------
-*filter
-:INPUT ACCEPT [0:0]
-:FORWARD ACCEPT [0:0]
-:OUTPUT ACCEPT [0:0]
--A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
--A INPUT -p icmp -j ACCEPT
--A INPUT -i lo -j ACCEPT
--A INPUT -m state --state NEW -m tcp -p tcp --dport 22 -j ACCEPT
-# openvpn
--A INPUT -p udp --dport 8001 -j ACCEPT
-# do not allow anything else
--A INPUT -j REJECT --reject-with icmp-host-prohibited
-# openvpn
--A FORWARD -s 192.168.10.0/24 -d 192.168.20.0/24 -j ACCEPT
--A FORWARD -s 192.168.20.0/24 -d 192.168.10.0/24 -j ACCEPT
-# do not allow anything else
--A FORWARD -j REJECT --reject-with icmp-host-prohibited
-COMMIT
-------
-
+Tạo static key
+```
 openvpn --genkey --secret /etc/openvpn/office-home.key
+```
+```
 chmod 600 /etc/openvpn/office-home.conf
 chmod 400 /etc/openvpn/office-home.key
+```
+copy static key sang home
+```
 scp /etc/openvpn/office-home.key root@vpn-home:/etc/openvpn/office-home.key
-
+```
+Cho phép routing trên tất cả interface. Mặc định CentOS không cho phép routing giữa các interface.
+```
 echo 'net.ipv4.ip_forward = 1' >> /etc/sysctl.conf
 sysctl -p
+```
+Tương ứng với file config office-home.conf thì sẽ cần phải start service openvpn@office-home.
+Nếu có nhiều home kết nối vào thì phải tạo riêng từng config cho mỗi home. Rồi start service openvpn@ tương ứng.
+```
+systemctl enable --now openvpn@office-home
+```
 
-systemctl enable iptables
-systemctl restart iptables
+# Cài đặt trên home
 
-systemctl enable openvpn@office-home
-systemctl restart openvpn@office-home
-
-DO THIS ON HOME MACHINE:
-
+```
 vi /etc/openvpn/home-office.conf
 ------
-remote office.compress.to
+remote office.compress.to //Địa chỉ ip public của office
 port 4001
 float
 proto udp
@@ -86,44 +86,27 @@ persist-local-ip
 persist-remote-ip
 comp-lzo
 ping 15
+ping-restart 45
 secret /etc/openvpn/office-home.key
+cipher AES-256-CBC
 route 192.168.10.0 255.255.255.0
 user openvpn
 group openvpn
 syslog office-home
 verb 1
 ------
+```
 
-vi /etc/sysconfig/iptables
-------
-*filter
-:INPUT ACCEPT [0:0]
-:FORWARD ACCEPT [0:0]
-:OUTPUT ACCEPT [0:0]
--A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
--A INPUT -p icmp -j ACCEPT
--A INPUT -i lo -j ACCEPT
--A INPUT -m state --state NEW -m tcp -p tcp --dport 22 -j ACCEPT
-# openvpn
--A INPUT -p udp --dport 8001 -j ACCEPT
-# do not allow anything else
--A INPUT -j REJECT --reject-with icmp-host-prohibited
-# openvpn
--A FORWARD -s 192.168.10.0/24 -d 192.168.20.0/24 -j ACCEPT
--A FORWARD -s 192.168.20.0/24 -d 192.168.10.0/24 -j ACCEPT
-# do not allow anything else
--A FORWARD -j REJECT --reject-with icmp-host-prohibited
-COMMIT
-------
-
+```
 chmod 600 /etc/openvpn/home-office.conf
 chmod 400 /etc/openvpn/home-office.key
-
+```
+```
 echo 'net.ipv4.ip_forward = 1' >> /etc/sysctl.conf
 sysctl -p
+```
 
-systemctl enable iptables
-systemctl restart iptables
-
+```
 systemctl enable openvpn@home-office
 systemctl restart openvpn@home-office
+```
