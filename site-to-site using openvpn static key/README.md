@@ -116,3 +116,5 @@ sysctl -p
 systemctl enable openvpn@home-office
 systemctl restart openvpn@home-office
 ```
+
+Để tăng tính secure thì nên bật firewall 2 đầu server.
