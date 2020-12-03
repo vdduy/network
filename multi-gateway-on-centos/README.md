@@ -16,18 +16,19 @@ $ ip route add default via 192.168.1.1 dev eno1 table isp1
 The firewall is not involved in any way. Reply packets would always have been sent from the correct IP - but previously were being sent out via the wrong interface. Now these packets from the correct IP will be sent via the correct interface.
 
 Assuming the above worked, you can now make the rule and route changes permanent. This depends on what version of Unix you are using. As before, I'm assuming a RH/CentOS-based Linux distribution.
-
+```
 $ echo "from eno1 table isp1" > /etc/sysconfig/network-scripts/rule-eno1
 $ echo "default via 192.168.1.1 dev eno1 table isp1" > /etc/sysconfig/network-scripts/route-eno1
-
+```
 Test that the network change is permanent:
 ```
 $ ifdown eno1 ; ifup eno1
 ```
 If that didn't work, on the later versions of RH/CentOS you also need to do go with one of two options:
 
-    Don't use the default NetworkManager.service; Use network.service instead. I haven't explored the exact steps needed for this. I would imagine it involves the standard chkconfig or systemctl commands to enable/disable services.
-    Install the NetworkManager-dispatcher-routing-rules package
+Don't use the default NetworkManager.service; Use network.service instead. I haven't explored the exact steps needed for this. I would imagine it involves the standard chkconfig or systemctl commands to enable/disable services.
+
+Install the NetworkManager-dispatcher-routing-rules package
 
 Personally I prefer installing the rules package as it is the simpler more supported approach:
 ```
