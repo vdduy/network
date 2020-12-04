@@ -9,10 +9,12 @@ Start by testing (note that this is very similar to @Peter's answer. I am assumi
 ```
 The commands are as follows:
 ```
-$ echo 200 isp1 >> /etc/iproute2/rt_tables
-$ ip rule add from eno1 table isp1
-$ ip route add default via 192.168.1.1 dev eno1 table isp1
+echo 200 isp1 >> /etc/iproute2/rt_tables
+ip rule add from 192.168.1.2 table isp1
+ip route add default via 192.168.1.1 dev eno1 table isp1
 ```
+   
+ 
 The firewall is not involved in any way. Reply packets would always have been sent from the correct IP - but previously were being sent out via the wrong interface. Now these packets from the correct IP will be sent via the correct interface.
 
 Assuming the above worked, you can now make the rule and route changes permanent. This depends on what version of Unix you are using. As before, I'm assuming a RH/CentOS-based Linux distribution.
