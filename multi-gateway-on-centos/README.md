@@ -19,7 +19,7 @@ The firewall is not involved in any way. Reply packets would always have been se
 
 Assuming the above worked, you can now make the rule and route changes permanent. This depends on what version of Unix you are using. As before, I'm assuming a RH/CentOS-based Linux distribution.
 ```
-$ echo "from eno1 table isp1" > /etc/sysconfig/network-scripts/rule-eno1
+$ echo "from 192.168.1.2 table isp1" > /etc/sysconfig/network-scripts/rule-eno1
 $ echo "default via 192.168.1.1 dev eno1 table isp1" > /etc/sysconfig/network-scripts/route-eno1
 ```
 Test that the network change is permanent:
